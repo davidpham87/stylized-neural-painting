@@ -36,6 +36,8 @@ parser.add_argument('--output_dir', type=str, default=r'./output', metavar='str'
                     help='dir to save painting results (default: ./output)')
 parser.add_argument('--disable_preview', action='store_true', default=False,
                     help='disable cv2.imshow, for running remotely without x-display')
+parser.add_argument('--vector_file', type=str, default='./output/sunflowers_strokes.npz', metavar='str',
+                    help='path to pre-generated stroke vector file (default: ...)')
 args = parser.parse_args()
 
 
@@ -98,5 +100,6 @@ def optimize_x(pt):
 if __name__ == '__main__':
 
     pt = Painter(args=args)
+    print(args)
+    print(pt)
     optimize_x(pt)
-

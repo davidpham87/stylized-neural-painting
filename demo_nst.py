@@ -31,7 +31,7 @@ parser.add_argument('--net_G', type=str, default='zou-fusion-net', metavar='str'
                     help='net_G: plain-dcgan, plain-unet, huang-net, or zou-fusion-net (default: zou-fusion-net)')
 parser.add_argument('--renderer_checkpoint_dir', type=str, default=r'./checkpoints_G_oilpaintbrush', metavar='str',
                     help='dir to load neu-renderer (default: ./checkpoints_G_oilpaintbrush)')
-parser.add_argument('--lr', type=float, default=0.005,
+parser.add_argument('--lr', type=float, default=0.001,
                     help='learning rate for stroke searching (default: 0.005)')
 parser.add_argument('--output_dir', type=str, default=r'./output', metavar='str',
                     help='dir to save style transfer results (default: ./output)')
@@ -94,4 +94,3 @@ if __name__ == '__main__':
 
     pt = NeuralStyleTransfer(args=args)
     optimize_x(pt)
-

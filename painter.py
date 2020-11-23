@@ -58,6 +58,17 @@ class PainterBase():
         if os.path.exists(self.output_dir) is False:
             os.mkdir(self.output_dir)
 
+        if os.path.exists(args.vector_file):
+            npzfile = np.load(args.vector_file)
+            print(npzfile['x_ctt'].shape)
+            print(npzfile['x_color'].shape)
+            print(npzfile['x_alpha'].shape)
+            self.x_ctt = np.copy(npzfile['x_ctt'][:, ::-1, :])
+            self.x_color = np.copy(npzfile['x_color'][:, ::-1, :])
+            self.x_alpha = np.copy(npzfile['x_alpha'][:, ::-1, :])
+            self.m_grid = int(np.sqrt(self.x_ctt.shape[0]))
+            self.anchor_id = self.x_ctt.shape[1] - 1
+
     def _load_checkpoint(self):
 
         # load renderer G
@@ -114,7 +125,8 @@ class PainterBase():
             self.output_dir, self.img_path.split('/')[-1][:-4])
         out_img = cv2.resize(self.img_, (out_w, out_h), cv2.INTER_AREA)
         plt.imsave(file_name+'_input.png', out_img)
-        for i in range(len(self.final_rendered_images)):
+        indices = range(len(self.final_rendered_images))
+        for i in [indices[-1]]:
             out_img = cv2.resize(self.final_rendered_images[i], (out_w, out_h), cv2.INTER_AREA)
             plt.imsave(file_name + '_rendered_stroke_' + str((i+1)).zfill(4) +
                        '.png', out_img)
@@ -129,9 +141,6 @@ class PainterBase():
             frame = (self.final_rendered_images[i][:, :, ::-1] * 255.).astype(np.uint8)
             frame = cv2.resize(frame, (out_w, out_h), cv2.INTER_AREA)
             video_writer.write(frame)
-
-
-
 
     def _normalize_strokes(self, v):
 
@@ -165,19 +174,25 @@ class PainterBase():
 
     def initialize_params(self):
 
-        self.x_ctt = np.random.rand(
-            self.m_grid*self.m_grid, self.m_strokes_per_block,
-            self.rderr.d_shape).astype(np.float32)
+        if self.x_ctt is None:
+            self.x_ctt = np.random.rand(
+                self.m_grid*self.m_grid, self.m_strokes_per_block,
+                self.rderr.d_shape).astype(np.float32)
+
         self.x_ctt = torch.tensor(self.x_ctt).to(device)
 
-        self.x_color = np.random.rand(
-            self.m_grid*self.m_grid, self.m_strokes_per_block,
-            self.rderr.d_color).astype(np.float32)
+        if self.x_color is None:
+            self.x_color = np.random.rand(
+                self.m_grid*self.m_grid, self.m_strokes_per_block,
+                self.rderr.d_color).astype(np.float32)
+
         self.x_color = torch.tensor(self.x_color).to(device)
 
-        self.x_alpha = np.random.rand(
-            self.m_grid*self.m_grid, self.m_strokes_per_block,
-            self.rderr.d_alpha).astype(np.float32)
+        if self.x_alpha is None:
+            self.x_alpha = np.random.rand(
+                self.m_grid*self.m_grid, self.m_strokes_per_block,
+                self.rderr.d_alpha).astype(np.float32)
+
         self.x_alpha = torch.tensor(self.x_alpha).to(device)
 
 
