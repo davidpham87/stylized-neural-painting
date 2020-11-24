@@ -62,9 +62,9 @@ def optimize_x(pt):
     pt.step_id = 0
     for pt.anchor_id in range(0, pt.m_strokes_per_block):
         pt.stroke_sampler(pt.anchor_id)
-        iters_per_stroke = 20
+        iters_per_stroke = 200
         if pt.anchor_id == pt.m_strokes_per_block - 1:
-            iters_per_stroke = 40
+            iters_per_stroke = 400
         for i in range(iters_per_stroke):
 
             pt.optimizer_x.zero_grad()

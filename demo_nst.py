@@ -60,7 +60,7 @@ def optimize_x(pt):
 
     pt.optimizer_x_sty = optim.RMSprop([pt.x_ctt, pt.x_color, pt.x_alpha], lr=pt.lr)
 
-    iters_per_stroke = 100
+    iters_per_stroke = 50
     for i in range(iters_per_stroke):
         pt.optimizer_x_sty.zero_grad()
 

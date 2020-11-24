@@ -10,15 +10,18 @@ import morphology
 import renderer
 
 import torch
-torch.cuda.current_device()
 
-# Decide which device we want to run on
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+try:
+    # Decide which device we want to run on
+    torch.cuda.current_device()
+    DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+except:
+    DEVICE = None
 
 class PainterBase():
-    def __init__(self, args):
+    def __init__(self, args, device=DEVICE):
         self.args = args
+        self.device = device
 
         self.rderr = renderer.Renderer(renderer=args.renderer,
                                        CANVAS_WIDTH=args.canvas_size, canvas_color=args.canvas_color)
@@ -55,6 +58,7 @@ class PainterBase():
         self.m_grid = None
         self.m_strokes_per_block = None
 
+
         if os.path.exists(self.output_dir) is False:
             os.mkdir(self.output_dir)
 
@@ -80,7 +84,7 @@ class PainterBase():
                 self.renderer_checkpoint_dir, 'last_ckpt.pt'))
             # update net_G states
             self.net_G.load_state_dict(checkpoint['model_G_state_dict'])
-            self.net_G.to(device)
+            self.net_G.to(self.device)
             self.net_G.eval()
         else:
             print('pre-trained renderer does not exist...')
@@ -126,7 +130,7 @@ class PainterBase():
         out_img = cv2.resize(self.img_, (out_w, out_h), cv2.INTER_AREA)
         plt.imsave(file_name+'_input.png', out_img)
         indices = range(len(self.final_rendered_images))
-        for i in [indices[-1]]:
+        for i in indices[-10:]:
             out_img = cv2.resize(self.final_rendered_images[i], (out_w, out_h), cv2.INTER_AREA)
             plt.imsave(file_name + '_rendered_stroke_' + str((i+1)).zfill(4) +
                        '.png', out_img)
@@ -173,6 +177,8 @@ class PainterBase():
 
 
     def initialize_params(self):
+
+        device = self.device
 
         if self.x_ctt is None:
             self.x_ctt = np.random.rand(
@@ -261,8 +267,8 @@ class PainterBase():
 
 class Painter(PainterBase):
 
-    def __init__(self, args):
-        super(Painter, self).__init__(args=args)
+    def __init__(self, args, device=DEVICE):
+        super(Painter, self).__init__(args=args, device=device)
 
         self.m_grid = args.m_grid
 
@@ -276,7 +282,7 @@ class Painter(PainterBase):
 
         self.m_strokes_per_block = int(args.max_m_strokes / (args.m_grid * args.m_grid))
 
-        self.img_batch = utils.img2patches(self.img_, args.m_grid).to(device)
+        self.img_batch = utils.img2patches(self.img_, args.m_grid).to(self.device)
 
         self.final_rendered_images = None
 
@@ -380,8 +386,8 @@ class ProgressivePainter(PainterBase):
 
 class NeuralStyleTransfer(PainterBase):
 
-    def __init__(self, args):
-        super(NeuralStyleTransfer, self).__init__(args=args)
+    def __init__(self, args, device=DEVICE):
+        super(NeuralStyleTransfer, self).__init__(args=args, device=device)
 
         self.args = args
 
@@ -427,7 +433,7 @@ class NeuralStyleTransfer(PainterBase):
 
     def _backward_x_sty(self):
         canvas = utils.patches2img(
-            self.G_final_pred_canvas, self.m_grid, to_numpy=False).to(device)
+            self.G_final_pred_canvas, self.m_grid, to_numpy=False).to(self.device)
         self.G_loss = self.args.beta_L1 * self._pxl_loss(
             canvas=self.G_final_pred_canvas, gt=self.img_batch, ignore_color=True)
         self.G_loss += self.args.beta_sty * self._style_loss(canvas, self.style_img)
